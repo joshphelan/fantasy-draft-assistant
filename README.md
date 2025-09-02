@@ -47,6 +47,8 @@ The `config.json` file contains your league settings:
 
 You can edit this file directly or use the configuration panel in the app's sidebar.
 
+**Note:** The `config.json` file is included in `.gitignore` and should be created locally by each user. This prevents accidentally committing your personal league and user IDs to the repository.
+
 ## Player Rankings
 
 The app uses a CSV file with player rankings located at `data/dynasty_rankings.csv`. This file includes:
