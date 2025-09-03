@@ -33,6 +33,7 @@ Thumbs.db
 .env
 .env.local
 config.json
+.streamlit/secrets.toml
 
 # Logs
 *.log

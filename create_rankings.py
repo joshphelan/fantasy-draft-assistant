@@ -167,36 +167,77 @@ def merge_rankings_with_ids(rankings_df, ids_df, sleeper_players):
 
 def create_config(league_id, user_id=None):
     """
-    Create or update the config.json file.
+    Create or update the Streamlit secrets file.
     
     Args:
         league_id (str): The Sleeper league ID
         user_id (str, optional): The Sleeper user ID
     """
-    config_path = "config.json"
+    # Create .streamlit directory if it doesn't exist
+    if not os.path.exists(".streamlit"):
+        os.makedirs(".streamlit")
+        print("Created .streamlit directory for Streamlit secrets")
     
-    if os.path.exists(config_path):
-        with open(config_path, "r") as f:
-            config = json.load(f)
-    else:
-        config = {
-            "roster_settings": {
-                "QB": 1,
-                "RB": 2,
-                "WR": 3,
-                "TE": 1,
-                "FLEX": 2
+    # Check if secrets.toml exists
+    secrets_path = ".streamlit/secrets.toml"
+    
+    try:
+        # Try to import toml module
+        import toml
+        
+        if os.path.exists(secrets_path):
+            # Load existing secrets
+            with open(secrets_path, "r") as f:
+                secrets_content = f.read()
+                try:
+                    secrets = toml.loads(secrets_content)
+                except:
+                    secrets = {}
+        else:
+            # Create new secrets file
+            secrets = {}
+        
+        # Initialize sleeper section if it doesn't exist
+        if "sleeper" not in secrets:
+            secrets["sleeper"] = {}
+        
+        # Update secrets
+        secrets["sleeper"]["league_id"] = league_id
+        if user_id:
+            secrets["sleeper"]["user_id"] = user_id
+        
+        # Write updated secrets
+        with open(secrets_path, "w") as f:
+            toml.dump(secrets, f)
+        
+        print(f"Config saved to {secrets_path}")
+    except ImportError:
+        print("Warning: toml module not found. Using fallback JSON config.")
+        # Fallback to JSON if toml is not available
+        config_path = "config.json"
+        
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                config = json.load(f)
+        else:
+            config = {
+                "roster_settings": {
+                    "QB": 1,
+                    "RB": 2,
+                    "WR": 3,
+                    "TE": 1,
+                    "FLEX": 2
+                }
             }
-        }
-    
-    config["league_id"] = league_id
-    if user_id:
-        config["user_id"] = user_id
-    
-    with open(config_path, "w") as f:
-        json.dump(config, f, indent=2)
-    
-    print(f"Config saved to {config_path}")
+        
+        config["league_id"] = league_id
+        if user_id:
+            config["user_id"] = user_id
+        
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=2)
+        
+        print(f"Config saved to {config_path}")
 
 def create_fallback_rankings():
     """
@@ -385,7 +426,7 @@ def main(league_id=None, user_id=None):
     # Create config if league_id is provided
     if league_id:
         create_config(league_id, user_id)
-        print(f"Updated config.json with league_id: {league_id}")
+        print(f"Updated configuration with league_id: {league_id}")
     else:
         print("No league_id provided, skipping config update")
     
@@ -433,8 +474,8 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description="Create dynasty rankings CSV")
-    parser.add_argument("--league_id", help="Sleeper league ID (optional, only needed for config.json)")
-    parser.add_argument("--user_id", help="Sleeper user ID (optional, only needed for config.json)")
+    parser.add_argument("--league_id", help="Sleeper league ID (optional, only needed for configuration)")
+    parser.add_argument("--user_id", help="Sleeper user ID (optional, only needed for configuration)")
     
     args = parser.parse_args()
     

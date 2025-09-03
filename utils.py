@@ -7,7 +7,6 @@ from typing import Dict, List, Any, Optional
 
 # --- Constants ---
 BASE_URL = "https://api.sleeper.app/v1"
-CONFIG_PATH = "config.json"
 RANKINGS_PATH = "data/dynasty_rankings.csv"
 
 # --- API Functions ---
@@ -138,15 +137,27 @@ def get_all_players() -> Dict:
 # --- Config Functions ---
 def load_config() -> Dict:
     """
-    Load the config from config.json.
+    Load the config from Streamlit secrets.
     
     Returns:
         dict: The config data
     """
-    if os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH, "r") as f:
-            return json.load(f)
-    else:
+    try:
+        import streamlit as st
+        return {
+            "league_id": st.secrets["sleeper"]["league_id"],
+            "user_id": st.secrets["sleeper"]["user_id"],
+            "roster_settings": {
+                "QB": 1,
+                "RB": 2,
+                "WR": 3,
+                "TE": 1,
+                "FLEX": 2
+            }
+        }
+    except (ImportError, KeyError):
+        # Fallback for non-Streamlit environments or missing secrets
+        print("Warning: Streamlit secrets not available. Using default config.")
         return {
             "league_id": "",
             "user_id": "",
@@ -161,14 +172,13 @@ def load_config() -> Dict:
 
 def save_config(config: Dict) -> None:
     """
-    Save the config to config.json.
+    This function is deprecated. Configuration is now managed through Streamlit secrets.
     
     Args:
-        config (dict): The config data
+        config (dict): The config data (ignored)
     """
-    with open(CONFIG_PATH, "w") as f:
-        json.dump(config, f, indent=2)
-    print(f"Config saved to {CONFIG_PATH}")
+    print("Warning: Configuration is now managed through Streamlit secrets.")
+    print("To update configuration, edit .streamlit/secrets.toml locally or use the Streamlit Cloud dashboard.")
 
 # --- Data Processing Functions ---
 def build_available_pool(rankings_df: pd.DataFrame, picks: List[Dict]) -> pd.DataFrame:

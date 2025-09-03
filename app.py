@@ -8,15 +8,11 @@ import math
 from typing import Dict, List, Any, Optional, Tuple
 
 # --- Configuration ---
-CONFIG_PATH = "config.json"
-
-# Load config
-if os.path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH, "r") as f:
-        CONFIG = json.load(f)
-else:
-    st.error("Config file not found. Please run create_rankings.py first.")
-    st.stop()
+# Use Streamlit secrets for configuration
+CONFIG = {
+    "league_id": st.secrets["sleeper"]["league_id"],
+    "user_id": st.secrets["sleeper"]["user_id"]
+}
 
 # --- Sleeper API Client ---
 class SleeperClient:
@@ -505,11 +501,23 @@ def main():
         
         # Save config button
         if st.button("Save Configuration"):
+            # Update the CONFIG dictionary
             CONFIG["league_id"] = league_id
             CONFIG["user_id"] = user_id
-            with open(CONFIG_PATH, "w") as f:
-                json.dump(CONFIG, indent=2, fp=f)
-            st.success("Configuration saved!")
+            
+            # Create .streamlit directory if it doesn't exist
+            if not os.path.exists(".streamlit"):
+                os.makedirs(".streamlit")
+            
+            # Save to secrets.toml
+            try:
+                import toml
+                secrets = {"sleeper": {"league_id": league_id, "user_id": user_id}}
+                with open(".streamlit/secrets.toml", "w") as f:
+                    toml.dump(secrets, f)
+                st.success("Configuration saved!")
+            except Exception as e:
+                st.error(f"Failed to save configuration: {str(e)}")
         
         # Divider
         st.divider()

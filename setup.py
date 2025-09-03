@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import json
+import toml
 
 def main():
     print("Fantasy Draft Assistant Setup")
@@ -10,27 +11,45 @@ def main():
     print("It will get your Sleeper user ID and create the rankings CSV file.")
     print()
     
-    # Check if config.json exists
-    if not os.path.exists("config.json"):
-        print("Error: config.json not found. Please make sure you're in the correct directory.")
-        return
+    # Create .streamlit directory if it doesn't exist
+    if not os.path.exists(".streamlit"):
+        os.makedirs(".streamlit")
+        print("Created .streamlit directory for Streamlit secrets")
     
-    # Load config
-    with open("config.json", "r") as f:
-        config = json.load(f)
+    # Check if secrets.toml exists
+    secrets_path = ".streamlit/secrets.toml"
+    if os.path.exists(secrets_path):
+        # Load existing secrets
+        with open(secrets_path, "r") as f:
+            secrets_content = f.read()
+            try:
+                secrets = toml.loads(secrets_content)
+            except:
+                secrets = {}
+                
+        # Initialize sleeper section if it doesn't exist
+        if "sleeper" not in secrets:
+            secrets["sleeper"] = {}
+    else:
+    # Create new secrets file
+        secrets = {"sleeper": {}}
+        print(f"Created new {secrets_path} file for configuration")
+    
+    # Extract config values
+    league_id = secrets.get("sleeper", {}).get("league_id", "")
+    user_id = secrets.get("sleeper", {}).get("user_id", "")
     
     # Check if league ID is set
-    league_id = config.get("league_id")
     if not league_id:
         league_id = input("Enter your Sleeper league ID: ")
-        config["league_id"] = league_id
-        with open("config.json", "w") as f:
-            json.dump(config, f, indent=2)
+        secrets["sleeper"]["league_id"] = league_id
+        with open(secrets_path, "w") as f:
+            toml.dump(secrets, f)
+        print(f"League ID saved to {secrets_path}")
     else:
         print(f"League ID: {league_id}")
     
     # Check if user ID is set
-    user_id = config.get("user_id")
     if not user_id:
         # Ask for username
         username = input("Enter your Sleeper username: ")
@@ -50,17 +69,17 @@ def main():
             user_id_line = [line for line in result.stdout.split("\n") if "User ID for" in line][0]
             user_id = user_id_line.split(": ")[1].strip()
             
-            # Update config
-            config["user_id"] = user_id
-            with open("config.json", "w") as f:
-                json.dump(config, f, indent=2)
+            # Update secrets
+            secrets["sleeper"]["user_id"] = user_id
+            with open(secrets_path, "w") as f:
+                toml.dump(secrets, f)
             
-            print(f"User ID saved to config.json: {user_id}")
+            print(f"User ID saved to {secrets_path}: {user_id}")
         else:
             user_id = input("Could not automatically get your user ID. Please enter it manually: ")
-            config["user_id"] = user_id
-            with open("config.json", "w") as f:
-                json.dump(config, f, indent=2)
+            secrets["sleeper"]["user_id"] = user_id
+            with open(secrets_path, "w") as f:
+                toml.dump(secrets, f)
     else:
         print(f"User ID: {user_id}")
     
@@ -77,8 +96,13 @@ def main():
     # Check if rankings file was created
     if os.path.exists("data/dynasty_rankings.csv"):
         print("\nSetup complete!")
+        print("Configuration saved to .streamlit/secrets.toml")
         print("You can now run the Fantasy Draft Assistant with:")
         print("streamlit run app.py")
+        print("\nFor deployment to Streamlit Cloud:")
+        print("1. Add your configuration to the Streamlit Cloud dashboard")
+        print("2. In the app settings, add the following secrets:")
+        print(f"   [sleeper]\n   league_id = \"{league_id}\"\n   user_id = \"{user_id}\"")
     else:
         print("\nError: Failed to create rankings file.")
         print("Please check the output above for errors.")

@@ -32,22 +32,20 @@ A real-time dynasty draft assistant for Sleeper fantasy football leagues. This t
 
 ## Configuration
 
-The `config.json` file contains your league settings:
+The app uses Streamlit secrets to store your configuration. The `.streamlit/secrets.toml` file contains your league settings:
 
-```json
-{
-  "league_id": "your_league_id",
-  "user_id": "your_user_id"
-}
+```toml
+[sleeper]
+league_id = "your_league_id"
+user_id = "your_user_id"
 ```
 
 - `league_id`: Your Sleeper league ID
 - `user_id`: Your Sleeper user ID
-- `roster_settings`: The number of players required at each position
 
-You can edit this file directly or use the configuration panel in the app's sidebar.
+For local development, you can edit this file directly. For deployment to Streamlit Cloud, you'll need to add these secrets in the Streamlit Cloud dashboard.
 
-**Note:** The `config.json` file is included in `.gitignore` and should be created locally by each user. This prevents accidentally committing your personal league and user IDs to the repository.
+**Note:** The `.streamlit/secrets.toml` file is included in `.gitignore` and should be created locally by each user. This prevents accidentally committing your personal league and user IDs to the repository.
 
 ## Player Rankings
 
@@ -107,7 +105,8 @@ fantasy-draft-assistant/
 ├── fix_player_ids.py   # Script to fix player IDs in rankings
 ├── get_user_id.py      # Script to get your Sleeper user ID
 ├── setup.py            # Easy setup script to get started quickly
-├── config.json         # Configuration with league_id, user_id, roster settings
+├── .streamlit/         # Directory for Streamlit configuration
+│   └── secrets.toml    # Configuration with league_id, user_id
 ├── .gitignore          # Git ignore file for virtual environment and cache files
 ├── data/               # Directory for the rankings CSV
 ├── requirements.txt    # Python dependencies
